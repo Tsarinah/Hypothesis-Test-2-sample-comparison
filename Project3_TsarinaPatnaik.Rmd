@@ -1,0 +1,591 @@
+---
+title: "Project3_TsarinaPatnaik"
+author: "Tsarina Patnaik"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+#Setting up libraries for Project 3
+library(readxl) 
+library(rmarkdown)
+library(tidyverse) 
+library(dplyr) 
+library(DT) 
+library(RColorBrewer) 
+library(rio) 
+library(magrittr)
+library(knitr)
+library(ggplot2)
+library(dbplyr) 
+library(psych) 
+library(FSA) 
+library(kableExtra)
+library(devtools)
+
+#Importing the data set for Project 3
+dataset3 <- read_excel("~/Desktop/ALY6010_R_Project/Project3_TsarinaPatnaik/M3ProjectData.xlsx")
+```
+<P><CENTER>
+<FONT size=5, color= "purple">
+<B>ALY6010 Probability and Statistical Theory</B> </FONT>
+<BR>
+<FONT size=4, color= "purple">
+<B>Northeastern University</B>
+<BR>
+Tsarina Patnaik
+<BR>
+Date: 27th November, 2022
+<BR>
+<B>Project 3 Report: Hypothesis Testing for various Population Parameters</B>
+<BR>
+Instructor: Dr. Dee Chiluiza, PhD
+</FONT>
+</CENTER>
+<BR>
+<BR>
+<BR>
+<P>
+<FONT size=4, color= "purple">
+<B> INTRODUCTION </B> </FONT>
+<BR>
+<B> a. Confidence Levels: </B> Adopting confidence intervals, one may gauge how "excellent" an estimate is e.g  the wider the 90% confidence interval is for a given estimate, the more care must be used when using that estimate. The existence of confidence intervals serves as a crucial reminder of the estimates' limits.
+<BR>
+<B> Confidence Levels in the Healthcare industry: </B> Confidence intervals offer a way to evaluate and communicate the accuracy of a point estimate, such as a mortality or hospitalization rate or a reported behavior frequency. Confidence intervals take into account the uncertainty caused by the natural variation present in our environment. Confidence intervals with a 95% level of confidence are traditionally reported. These ranges show where, with a 95% confidence level, we can expect the treatment effect to fall.
+<BR>
+<P>
+<B> b. Hypothesis Testing: </B> Selecting one of two competing hypotheses is the process of hypothesis testing. The null hypothesis, or H0, is a statistical claim that there is no statistically significant difference between an estimated value for a population parameter based on a sample of that population and its hypothesized value.
+<BR>
+<B> Hypothesis Testing in the Healthcare industry: </B> According to Enago, <i> "Drawing conclusions from statistical analysis of data collected is the process of hypothesis testing, and the particular strategy used to test means" </i>. For an example, a particular hypothesis may read, "Adults are more likely to acquire type II diabetes than adults who consume less than 10 grams of milk chocolate per day, as determined by a questionnaire over the course of 12 months."
+<P>
+<FONT size=4, color= "purple">
+<B> ANALYSIS </B> </FONT>
+<BR>
+<FONT size=3, color= "purple">
+<B>Task 1 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In this task, have taken the data set and presented the first fifteen observations of the dataset3.
+```{r message=FALSE, warning=FALSE}
+# Task 1
+table_basic <- head(dataset3 , 15)
+knitr::kable(table_basic,
+             format = "html", 
+             main = "Table 1",
+             style = ~ style(color = "grey",font.weight = "bold"),
+             align = "c",
+             table.attr = "style='width:100%;'")
+
+```
+<BR>
+<B> Observations from Task 1: </B> I used the head() command to print the first 15 observations from the dataset that was given. Then I used the knitr::kable() to plot the table and enhanced it's outlook.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 2 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have found the mean, median and standard deviation of the population as well as the Sample 1 from the dataset.  
+```{r message=FALSE, warning=FALSE}
+# Task 2
+population_mean = mean(dataset3$Population, na.rm = TRUE)
+population_median = median(dataset3$Population, na.rm = TRUE)
+population_sd = sd(dataset3$Population, na.rm = TRUE)
+
+sample1_mean = mean(dataset3$`Sample 1`, na.rm = TRUE)
+sample1_median = median(dataset3$`Sample 1`, na.rm = TRUE)
+sample1_sd = sd(dataset3$`Sample 1`, na.rm = TRUE)
+
+mean = c(population_mean, sample1_mean)
+median = c(population_median, sample1_median)
+SD = c(population_sd, sample1_sd)
+
+table_basic1 = matrix(c(mean, median, SD), ncol=3, byrow = FALSE)
+colnames(table_basic1) = c("Mean", "Median", "Standard Deviation")
+rownames(table_basic1) = c(" ", " ")
+
+table_basic1 = as.table(table_basic1)
+
+knitr::kable(as.data.frame(names(table_basic1)),
+             format = "html", 
+             main = "Table 2",
+             align = 'c',
+             round(table_basic1,2),
+             table.attr = "style='width:100%;'")
+table_basic1 %>%
+  kbl(caption = paste("Table 2: Basic Statistics table for Sample 1")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 2: </B> In this task, I found the population and Sample 1 mean, median and SD using the basic descriptive statistics formulas. Then I created objects to store the data and used the knitr::kable() to plot the table and enhanced it's outlook.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 3 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task I have calculated the confidence levels for the sample mean at 90%, 96% and 99%.
+```{r message=FALSE, warning=FALSE}
+# Task 3 
+n = 160
+sample1_mean = mean(dataset3$`Sample 1`, na.rm = TRUE)
+sample1_median = median(dataset3$`Sample 1`, na.rm = TRUE)
+sample1_sd = sd(dataset3$`Sample 1`, na.rm = TRUE)
+
+
+conf90 = 0.90
+Z90 = qnorm((1+0.90)/2)
+Z_n_90 = qnorm((1-0.90)/2)
+m_error90 = qnorm((1+conf90)/2)*(sample1_sd/sqrt(n))
+ll90 = sample1_mean - m_error90
+ul90 = sample1_mean + m_error90
+width90 = ul90 - ll90
+
+conf96 = 0.96
+Z96 = qnorm((1+0.96)/2)
+Z_n_96 = qnorm((1-0.96)/2)
+m_error96 = qnorm((1+conf96)/2)*(sample1_sd/sqrt(n))
+ll96 = sample1_mean - m_error96
+ul96 = sample1_mean + m_error96
+width96 = ul96 - ll96
+
+conf99 = 0.99
+Z99 = qnorm((1+0.99)/2)
+Z_n_99 = qnorm((1-0.99)/2)
+m_error99 = qnorm((1+conf99)/2)*(sample1_sd/sqrt(n))
+ll99 = sample1_mean - m_error99
+ul99 = sample1_mean + m_error99
+width99 = ul99 - ll99
+
+
+confidence = c(conf90, conf96, conf99)
+margin_error = c(m_error90, m_error96, m_error99)
+Z_Score = c(Z90, Z96, Z99)
+Z_neg_Score = c(Z_n_90, Z_n_96, Z_n_99)
+lower_limit = c(ll90, ll96, ll99)
+upper_limit = c(ul90, ul96, ul99)
+width = c(width90, width96, width99)
+
+table_basic2 = matrix(c(confidence, margin_error, Z_Score, Z_neg_Score, lower_limit, upper_limit, width), ncol=7, byrow= FALSE)
+colnames(table_basic2) = c("Confidence Level", "Margin Error", "Z Score", "Z Negative", "Lower Limit", "Upper Limit", "Width")
+rownames(table_basic2) = c("90%", "96%", "99%")
+
+table_basic2 = as.table(table_basic2)
+
+knitr::kable(as.data.frame(names(table_basic2)),
+             format = "html",
+             table.border.top.color = "black",
+             main = "Table 3",
+             align = 'c',
+             round(table_basic2,2),
+             table.attr = "style='width:80%;'")
+table_basic2 %>%
+  kbl(caption = paste("Table 3: CL for Sample")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 3: </B> In this task, I calculated the confidence levels for the Sample 1. Firstly, I calculated the mean and SD for the sample and thereafter, I calculated the Margin Error, Z positive and Negative values and the Interval length. I have also presented a table for the results. The confidence interval ranging from 0.913 to 1.152 would be expected to cover the true population proportion 90% of the time. Through this task, I found that the confidence interval describes the estimate process rather than the particular interval produced in the sample.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 4 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task I have found the sample size for the confidence levels from the previous task
+```{r message=FALSE, warning=FALSE}
+# Task 4: 
+sample1_mean = mean(dataset3$`Sample 1`, na.rm = TRUE)
+sample1_sd = sd(dataset3$`Sample 1`, na.rm = TRUE)
+
+zscore90 = 1.645
+n90 = (((zscore90)^2 * (sample1_sd)^2)/(m_error90)^2)
+
+zscore96 = 2.054
+n96 = (((zscore96)^2 * (sample1_sd)^2)/(m_error96)^2)
+
+zscore99 = 2.576
+n99 = (((zscore99)^2 * (sample1_sd)^2)/(m_error99)^2)
+
+sample_size = c(n90, n96, n99)
+
+table_basic3 = matrix(c(sample_size), ncol=1, byrow= FALSE)
+colnames(table_basic3) = c("Sample Size")
+rownames(table_basic3) = c("90%", "96%", "99%")
+table_basic3 = as.table(table_basic3)
+
+knitr::kable(as.data.frame(names(table_basic3)),
+             format = "html",
+             table.border.top.color = "black",
+             main = "Table 4",
+             align = 'c',
+             round(table_basic3,2),
+             table.attr = "style='width:100%;'")
+table_basic3 %>%
+  kbl(caption = paste("Table 4: Finding the Sample Size for CL")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 4: </B> In this task, I found the sample size from the confidence levels used in the previous task. I used the Z Score for the calculations and found the sample size to be extremely close to 160, as expected. For 90%, the sample size obtained was 160.0285, for 96% was 160.0391 and as for 99% is was 160.0212. The actual sample size, n = 160.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 5 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have calculated the confidence level for the sample mean for n<30. 
+```{r message=FALSE, warning=FALSE}
+# Task 5: 
+n2 = 23
+df = n2 - 1
+sample2_mean = mean(dataset3$`Sample 2`, na.rm = TRUE)
+sample2_sd = sd(dataset3$`Sample 2`, na.rm = TRUE)
+
+t90 = qt((1+conf90)/2,n2-1)
+E290 = qt((1+conf90)/2,n2-1)*(sample2_sd/sqrt(n2))
+lower_limit90t = sample2_mean - E290
+upper_limit90t = sample2_mean + E290
+width90t =  upper_limit90t - lower_limit90t
+
+t96 = qt((1+conf96)/2,n2-1)
+E296 = qt((1+conf96)/2,n2-1)*(sample2_sd/sqrt(n2))
+lower_limit96t = sample2_mean - E296
+upper_limit96t = sample2_mean + E296
+width96t = upper_limit96t - lower_limit96t
+
+t99 = qt((1+conf99)/2,n2-1)
+E299 = qt((1+conf99)/2,n2-1)*(sample2_sd/sqrt(n2))
+lower_limit99t = sample2_mean - E299
+upper_limit99t = sample2_mean + E299
+width99t = upper_limit99t - lower_limit99t
+
+confidence_level_t = c(conf90, conf96, conf99)
+tc = c(t90, t96, t99)
+margin_error_t = c(E290, E296, E299)
+lower_limit_t = c(lower_limit90t, lower_limit96t, lower_limit99t)
+upper_limit_t = c(upper_limit90t, upper_limit96t, upper_limit99t)
+width_t = c(width90t, width96t, width99t)
+
+table_basic_t = matrix(c(confidence_level_t, tc, margin_error_t, lower_limit_t, upper_limit_t, width_t), ncol=6, byrow= FALSE)
+colnames(table_basic_t) = c("Confidence Level", "Tc", "Margin Error", "Lower Limit", "Upper Limit", "Width")
+rownames(table_basic_t) = c("90%", "96%", "99%")
+
+table_basic_t = as.table(table_basic_t)
+
+knitr::kable(as.data.frame(names(table_basic_t)),
+             format = "html", 
+             main = "Table 5",
+             align = "c",
+             round(table_basic_t,2),
+             table.attr = "style='width:100%;'")
+table_basic_t %>%
+  kbl(caption = paste("Table 5: CL for n<30")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 5: </B> In the task performed above, I calculated the confidence levels at 90%, 96% and 99% for n<30. I found the margin error, upper and lower limits and width of the interval for the same. The results have been presented in the table. From the table it is easy to predict that the population mean does fall in these confidence intervals. 
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 6 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have performed analysis using the sample proportions using the sample 3 from the dataset.
+```{r message=FALSE, warning=FALSE}
+# Task 6
+n3 = 1500
+mean3 = mean(dataset3$`Sample 3`, na.rm = TRUE)
+
+Pop_length = length(dataset3$Population)
+Pop_SF = dataset3 %>% count(Population < 1.7)
+
+Pop_success = Pop_SF$n[2]/Pop_length
+Pop_success
+
+Pop_Failure = Pop_SF$n[1]/Pop_length
+Pop_Failure
+
+Sam_length = length(dataset3$`Sample 3`)
+Sam_SF = dataset3 %>% count(Population < 1.7)
+
+Sam_success = Sam_SF$n[2]/Sam_length
+Sam_success
+
+Sam_Failure = Sam_SF$n[1]/Sam_length
+Sam_Failure
+
+length = c(Pop_length, Sam_length)
+SF = c(Pop_SF, Sam_SF)
+Success = c(Pop_success, Sam_success)
+Success_s = round(Success, 3)
+Failure = c(Pop_Failure, Sam_Failure)
+Failure_f = round(Failure, 3)
+
+table_task6_a = matrix(c(length, SF, Success_s, Failure_f), ncol=4, byrow= FALSE)
+colnames(table_task6_a) = c("Length", "SF", "Success", "Failure")
+
+table_task6_a = as.table(table_task6_a)
+
+knitr::kable(as.data.frame(names(table_task6_a)),
+             format = "html", 
+             main = "Table 6.1",
+             align = "c",
+             table.attr = "style='width:100%;'")
+
+table_task6_a %>%
+  kbl(caption = paste("Table 6.1: Sample Proportions")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+
+Z90_p_6 = qnorm((1+0.90)/2)
+Z90_n_6 = qnorm((1-0.90)/2)
+m_error_90_6 = Z90_p_6*(sqrt((Sam_success * Sam_Failure)/n3))
+ll90_6 = mean3 - m_error_90_6
+ul90_6 = mean3 + m_error_90_6 
+width90_6 = ul90_6 - ll90_6
+
+
+Z96_p_6 = qnorm((1+0.96)/2)
+Z96_n_6 = qnorm((1-0.96)/2)
+m_error_96_6 = Z96_p_6*(sqrt((Sam_success * Sam_Failure)/n3))
+ll96_6 = mean3 - m_error_96_6
+ul96_6 = mean3 + m_error_96_6 
+width96_6 = ul96_6 - ll96_6
+
+
+Z99_p_6 = qnorm((1+0.99)/2)
+Z99_n_6 = qnorm((1-0.99)/2)
+m_error_99_6 = Z99_p_6*(sqrt((Sam_success * Sam_Failure)/n3))
+ll99_6 = mean3 - m_error_99_6
+ul99_6 = mean3 + m_error_99_6 
+width99_6 = ul99_6 - ll99_6
+
+Z_plus = c(Z90_p_6, Z96_p_6, Z99_p_6)
+Z_neg = c(Z90_n_6, Z96_n_6, Z99_n_6)
+M_error = c(m_error_90_6, m_error_96_6, m_error_99_6)
+Lower_Limit_6 = c(ll90_6, ll96_6, ll99_6)
+Upper_Limit_6 = c(ul90_6, ul96_6, ul99_6)
+Width_6 = c(width90_6, width96_6, width99_6)
+
+table_task6_b = matrix(c(Z_plus, Z_neg, M_error, Lower_Limit_6, Upper_Limit_6, Width_6), ncol=6, byrow= FALSE)
+colnames(table_task6_b) = c("Z+", "Z-", "Error", "Lower Limit", "Upper Limit", "Width")
+rownames(table_task6_b) = c("90%", "96%", "99%")
+
+table_task6_bf = round(table_task6_b, 3) 
+
+final_table = as.table(table_task6_bf)
+
+knitr::kable(as.data.frame(names(final_table)),
+             format = "html", 
+             main = "Table 6.2",
+             align = "c",
+             table.attr = "style='width:100%;'")
+
+
+final_table %>%
+  kbl(caption = paste("Table 6.2: CL for Sample Proportions")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 6: </B> In the task performed above, I calculated the confidence interval at 90%, 96% and 99% for the sample proportions lower than 1.7. I calculated the proportion for success and failure for both, the sample as well as the population. Then, I presented a table to display the results for the same. From the results, I found that the population proportion value does not lie within 90% , 96%, and 99% confidence intervals.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 7 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have performed analysis using the sample variance using the sample 4 from the dataset3.
+```{r message=FALSE, warning=FALSE}
+# Task 7
+n4 = 150
+sample4_mean = mean(dataset3$`Sample 4`, na.rm = TRUE)
+sample4_sd = sd(dataset3$`Sample 4`, na.rm = TRUE)
+sample_variance = (sample4_sd^2)
+
+population_mean = mean(dataset3$Population, na.rm = TRUE)
+population_sd = sd(dataset3$Population, na.rm = TRUE)
+population_variance = (population_sd^2)
+
+chi_r90 = qchisq((1-0.90)/2, df=n4-1,lower.tail=FALSE)
+chi_l90 = qchisq(p=(1-(1-0.90)/2), df=n4-1,lower.tail=FALSE)
+ll_90_7 = ((n4-1)*sample_variance)/chi_r90
+ul_90_7 = ((n4-1)*sample_variance)/chi_l90
+Width90_7 = ul_90_7 - ll_90_7
+
+chi_r96 = qchisq((1-0.96)/2, df=n4-1,lower.tail=FALSE)
+chi_l96 = qchisq(p=(1-(1-0.96)/2), df=n4-1,lower.tail=FALSE)
+ll_96_7 = ((n4-1)*sample_variance)/chi_r96
+ul_96_7 = ((n4-1)*sample_variance)/chi_l96
+Width96_7 = ul_96_7 - ll_96_7
+
+chi_r99 = qchisq((1-0.99)/2, df=n4-1,lower.tail=FALSE)
+chi_l99 = qchisq(p=(1-(1-0.99)/2), df=n4-1,lower.tail=FALSE)
+ll_99_7 = ((n4-1)*sample_variance)/chi_r99
+ul_99_7 = ((n4-1)*sample_variance)/chi_l99
+Width99_7 = ul_99_7 - ll_99_7
+
+
+chi_r = c(chi_r90, chi_r96, chi_r99)
+chi_l = c(chi_l90, chi_l96, chi_l99)
+ll_7 = c(ll_90_7, ll_96_7, ll_99_7)
+ul_7 = c(ul_90_7, ul_96_7, ul_99_7)
+Width_7 = c(Width90_7, Width96_7, Width99_7)
+
+
+table_task7_a = matrix(c(chi_r, chi_l, ll_7, ul_7, Width_7), ncol=5, byrow= FALSE)
+colnames(table_task7_a) = c("Chi Right", "Chi Left", "Lower Limit", "Upper Limit", "Width")
+rownames(table_task7_a) = c("90%", "96%", "99%")
+
+table_task7_af = round(table_task7_a, 3) 
+
+final_table_7 = as.table(table_task7_af)
+
+knitr::kable(as.data.frame(names(final_table_7)),
+             format = "html", 
+             main = "Table 7",
+             align = "c",
+             table.attr = "style='width:100%;'")
+
+
+final_table_7 %>%
+  kbl(caption = paste("Table 7: CL for sample and population variance")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 7: </B> In the task performed above, I have performed analysis by finding the confidence levels for the sample variance at 90%, 96% and 99%. I found the values for x2right and x2left for  90%, 96% and 99% CI's. The respective values found were presented in the table. Through presenting the data, I found that the population varice does not lie in the confidence intervals.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 8 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have performed hypothesis testing on the sample 5.
+```{r message=FALSE, warning=FALSE}
+#Task 8
+population_mean = mean(dataset3$Population, na.rm = TRUE)
+population_sd = sd(dataset3$Population, na.rm = TRUE)
+n5 = 200
+sam_mean_8 = mean(dataset3$`Sample 5`,na.rm=TRUE)
+sam_sd_8 = sd(dataset3$`Sample 5`,na.rm=TRUE)
+Alpha_8 = 0.05
+
+ZTest = (sam_mean_8 - population_mean)/(population_sd/sqrt(n5))
+critical_ll = qnorm( Alpha_8/2)
+critical_ul = qnorm(0.95 + (Alpha_8/2))
+
+table_basic8 = matrix(c(Alpha_8, ZTest, critical_ll, critical_ul), ncol=4, byrow= FALSE)
+colnames(table_basic8) = c("Alpha", "Z Test", "CV Left", "CV Right")
+rownames(table_basic8) = c(" ")
+table_basic8 = as.table(table_basic8)
+
+knitr::kable(as.data.frame(names(table_basic8)),
+             format = "html",
+             table.border.top.color = "black",
+             main = "Table 8",
+             align = 'c',
+             round(table_basic8,2),
+             table.attr = "style='width:100%;'")
+table_basic8 %>%
+  kbl(caption = paste("Table 8: Hypothesis Testing")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+<BR>
+<B> Observations from Task 8: </B> In the task performed above, I have performed the hypothesis testing. I performed the basic descriptive statistics on the population and the sample in order to obtain the mean, standard deviation etc. After performing the Z test, I have calcuated the critical values for the same. I found that the Left CV comes out to be -1.96 and the right CV is 1.96. Since the ZTest is positive, we will consider the right critical value. It ca be seen that the Z test value is greater than the CV, thus we can reject the null hypothesis since the test value falls outside the critical value.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 9 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have found the p value using the z test value obtained in the previous task.
+```{r message=FALSE, warning=FALSE}
+#Task 9
+pval = round(1-pnorm(ZTest), digits = 3)
+pval
+```
+<BR>
+<B> Observations from Task 9: </B> In the task performed above, we have found the p value from the z test value obtained in the previous task. I can be seen that the p value obtained is smaller that the value of alpha. We know that to reject th H0, the p value must be smaller than the alpha.
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 10 </B> </FONT>
+<BR> 
+<B>Description:</B>
+<BR>
+In the following task, I have performed hypothesis testing on the sample 6.
+```{r message=FALSE, warning=FALSE}
+#Task 10
+population_mean = mean(dataset3$Population, na.rm = TRUE)
+population_sd = sd(dataset3$Population, na.rm = TRUE)
+n10 = 29
+sam_mean_10 = mean(dataset3$`Sample 6`,na.rm=TRUE)
+sam_sd_10 = sd(dataset3$`Sample 6`,na.rm=TRUE)
+Alpha_10 = 0.01
+
+ZTest_10 = (sam_mean_10 - population_mean)/(population_sd/sqrt(n10))
+critical_ll_10 = qnorm( Alpha_10/2)
+critical_ul_10 = qnorm(0.95 + (Alpha_10/2))
+
+table_basic10 = matrix(c(Alpha_10, ZTest_10, critical_ll_10, critical_ul_10), ncol=4, byrow= FALSE)
+colnames(table_basic10) = c("Alpha", "Test", "CV Left", "CV Right")
+rownames(table_basic10) = c(" ")
+table_basic10 = as.table(table_basic10)
+
+knitr::kable(as.data.frame(names(table_basic10)),
+             format = "html",
+             table.border.top.color = "black",
+             main = "Table 9",
+             align = 'c',
+             font = list(size = 12, color = "#000000"),
+             round(table_basic10,2),
+             table.attr = "style='width:100%;'")
+table_basic10 %>%
+  kbl(caption = paste("Table 9: Hypothesis Testing")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+<BR>
+<B> Observations from Task 10: </B> In the task performed above, I have performed the hypothesis testing. I performed the basic descriptive statistics on the population and the sample in order to obtain the mean, standard deviation etc. After performing the Z test, I have calcuated the critical values for the same. I found that the Left CV comes out to be -2.5 and 1.69 for left and right values respectively. 
+<P>
+<FONT size=4, color= "purple">
+<B> CONCLUSION </B> </FONT>
+<BR>
+In this Report for Week 3, I have performed Analysis using confidence intervals and testing a hypothesis with respect to three population parameters. The parameteres will be described further in the next paragraph. I have also plotted tables for the results in order to understand them better.
+<BR>
+The parameters I used were the population means, population proportions and the population variance.
+<BR>
+Through this project, I understood the actual meaning of confidence levels and how to use them for analysis purposes. I also learnt the use of confidence intervals in the healthcare industry
+<BR>
+I also tried to make a formal report for this project keeping a business perspective in mind. For this reason, I learnt how to effectively code and present my findings in a nice manner.
+<P>
+<FONT size=4, color= "purple">
+<B> BIBLIOGRAPHY </B> </FONT>
+<BR>
+1. Chiluiza, D. <i> https://rpubs.com/Dee_Chiluiza/816756 </i>, retrieved on 27th November, 2022
+<BR>
+2. Zack. September 28, 2020. <i> How to Perform a COUNTIF Function in R. Statology.</i> https://www.statology.org/countif-r/retrieved on 27th November, 2022
+<BR>
+3. B. Rebecca, August 7, 2020, <i>Understanding Confidence Intervals | Easy Examples & Formulas </i> https://www.scribbr.com/statistics/confidence-interval/ 27th November, 2022
+<BR>
+4. B. Davis, September 5, 2006, <i>Hypothesis Testing | Circulation</i> https://www.ahajournals.org/doi/full/10.1161/circulationaha.105.586461 retrieved on 27th November, 2022
+<BR>
+5. C. Jane, June 15, 2013 <i> Evidence-Based Nursing </i> https://ebn.bmj.com/content/15/3/66 retrieved on 27th November, 2022
+<P>
+<FONT size=4, color= "purple">
+<B> APPENDIX </B> </FONT>
+<BR>
+PFA an R Markdow file along with this report by the name <FONT color = "blue"> "Project3_TsarinaPatnaik" </FONT>
