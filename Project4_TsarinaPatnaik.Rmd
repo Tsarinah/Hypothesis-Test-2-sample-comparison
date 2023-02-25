@@ -1,0 +1,584 @@
+---
+title: "Project4_TsarinaPatnaik"
+author: "Tsarina Patnaik"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  word_document: default
+---
+```{r setup, message=FALSE, warning=FALSE}
+#Setting up libraries for Project 1
+library(readxl) 
+library(rmarkdown)
+library(tidyverse) 
+library(dplyr) 
+library(DT) 
+library(pander)
+library(RColorBrewer) 
+library(rio) 
+library(magrittr)
+library(knitr)
+library(ggplot2)
+library(dbplyr) 
+library(psych) 
+library(FSA) 
+library(kableExtra)
+library(devtools)
+library(plyr)
+
+#Importing the dataset for Project 1
+dataset4 <- read_excel("~/Desktop/ALY6010_R_Project/Project4_TsarinaPatnaik/lizards_project4.xlsx")
+```
+<P><CENTER>
+<FONT size=5, color= "purple">
+<B>ALY6010 Probability and Statistical Theory</B> </FONT>
+<BR>
+<FONT size=4, color= "purple">
+<B>Northeastern University</B>
+<BR>
+Tsarina Patnaik
+<BR>
+Date: 5th December, 2022
+<BR>
+<B>Project 4 Report: Applications of Different Hypothesis Tests for 2 Sample Comparisons</B>
+<BR>
+Instructor: Dr. Dee Chiluiza, PhD
+</FONT>
+</CENTER>
+<BR>
+<BR>
+<BR>
+<P>
+<FONT size=4, color= "purple">
+<B> INTRODUCTION </B> </FONT>
+<BR>
+<B> 1. What is Hypothesis Testing? </B>
+A type of statistical analysis known as hypothesis testing uses data from a sample to make inferences about a population parameter or probability distribution.
+<BR>
+<B> Hypothesis Testing in Healthcare: </B> Evidence-based medicine is frequently used by healthcare professionals as a practical decision-making tool. A research hypothesis is often tested, and the findings are usually presented using p values, confidence intervals, or both. The scientists also estimate or determine the statistical or scientific significance. 
+<BR>
+For eg. The predictor would be whether or not a person drinks chocolate, and the outcome would be having type II diabetes, if your hypothesis, for example, was that "Chocolate intake is connected to type II diabetes." A solid theory would also be specific. This means that it should be clear who will be involved and how the study will be conducted in order to evaluate the hypothesis. According to a questionnaire completed over the course of a year, individuals are more likely to develop type II diabetes than those who consume less than 10 grams of milk chocolate daily.
+<P>
+<B> 2. Applications of z-test, f-test and t-test: </B>
+<BR>
+Whether or not you are aware of the population standard deviation, a z-test may be used to test a population's mean against a standard or to compare the means of two populations when working with large (n 30) samples. Additionally, it is used to compare the proportions of two populations or to evaluate the percentage of a certain trait against a reference proportion.
+Using the average engineering salaries of men and women as an example
+<BR>
+Comparing the percentage of defectives from two production lines, for instance.
+<BR>
+If you do not know the standard deviation of the populations and you have a small sample size (n 30), you can use a t-test to compare the means of two populations or test the mean of one population against a standard.
+<BR>
+When working with large (n 30) samples, a z-test may be used to compare the means of two populations or test a population's mean against a standard, whether or not you are aware of the population standard deviation. It is also used to assess the percentage of a certain attribute in comparison to a reference % or to compare the proportions of two populations.
+As an illustration, let's look at the average engineering salaries for men and women.
+<BR>
+Comparing the percentage of defectives from two production lines, for instance.
+<BR>
+If you do not know the standard deviation of the populations and you have a small sample size (n 30), you can use a t-test to compare the means of two populations or test the mean of one population against a standard.
+<P>
+<B> 3. Importance of Using Academic References: </B>
+<BR>
+References play a significant role in academic writing. It contextualizes your work, exemplifies the range and depth of your study, and recognizes the contributions of others. Every time you borrow an idea from someone else, give credit.
+<BR>
+<BR>
+-helps you prevent plagiarism by making it apparent which ideas are your own and which are the work of others; 
+<BR>
+-demonstrates your command of the subject; 
+<BR>
+-provides support for your thoughts, arguments, and opinions; 
+<BR>
+-and enables others to determine the sources you have consulted.
+<BR>
+<P>
+<B> 4. Dataset Description: </B>
+<BR>
+The Lizards Dataset used for this project describes the Length and Heart Rate of both male and female lizards. Furthermore, for the purpose of analysis, a gender-wise subset has been created for male and female lizards. 
+<BR>
+<P>
+<FONT size=3, color= "purple">
+<B>Task 1 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B>To find the basic descriptive statistics</B></FONT>
+<BR>
+<B> Description:</B>
+In this task I have used this open question to use my knowledge on the basic descriptive statistics to plot some visualizations and draw some conclusions from the given dataset
+<BR>
+```{r message=FALSE, warning=FALSE}
+#Task 1
+
+dataset4 %>%
+  dplyr::select(Length, HeartRate)%>%
+  psych::describe() %>%
+  round(2) %>% 
+  t() %>%
+   kbl(caption = "Table.1.1.Basic Descriptive Statistics for Length and HeartRate in Lizards", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+
+# 1. Density plot to check the mean lengths of lizards in male and female lizards when compared to one another
+
+mu <- ddply(dataset4, "Sex", summarise, grp.mean = mean(Length))
+# Add mean lines
+Length_density_plot <- ggplot(dataset4, aes(x=Length, color=Sex)) +
+  geom_density() + geom_vline(data=mu, aes(xintercept = grp.mean, color=Sex),
+             linetype="dashed")
+Length_density_plot
+
+# 2. Boxplot for Heart Rates for Male and Female Lizards
+
+par(mai=c(1, 1, 0.3,0.2), mar=c(4,4,1,1))
+box2 = boxplot(dataset4$HeartRate ~ dataset4$Sex,
+               las=1,
+        col = brewer.pal(4,"Set2"),
+        ylim = c(0,5),
+        align = "c",
+        main = "Boxplots for Heart Rates in Male and Female Lizards",
+        xlab = "Gender (Female, Male)",
+        ylab = "Heart Rate (in Beats per Minute)")
+
+```
+<BR>
+<B> Methodology Task 1: </B> 
+<BR>
+For the above performed task, I used the psych::describe() to derive the basic descriptive statistics for the given dataset. Though this, I was able to get a good look at the dataset being dealth with. After that, I plotted a density plot for the lengths for the male and female lizards. I also pltted a box plot for the heart rated in male and female lizards.
+<BR>
+<B> Observations from Task 1: </B> 
+<BR>
+It is clear from the density plot that the mean for male lizard lengths is 22.24 and the mean for female is 20.14. It can be concluded that the male lizards have a larger length than the females. Also, through the boxplot, the distribution of the heart rate data can be seen.
+<P>
+<FONT size=3, color= "purple">
+<B>Task 2 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B>Testing Difference Between Two Means: Using z Test for Independent Samples</B></FONT>
+<BR>
+<B> Description:</B>
+In this task, I have performed hypotheses testing for the difference between 2 means using the z Test for 2 independent samples. 
+<BR>
+the two hypotheses here in question are: 
+
+H0 (Null Hypothesis) = male and female lizards have same length
+
+<CENTER><B> μ Sample 1 = μ Sample 2 </B></CENTER>
+
+H1 = male and female lizards don't have same length
+
+<CENTER><B> μ Sample 1 ≠  μ Sample 2 </B></CENTER>
+<BR>
+<BR>
+```{r message=FALSE, warning=FALSE}
+#Task 2
+a = 0.01
+male_var = 1.34
+female_var = 1.18
+
+#subsets
+male = subset(dataset4, subset=(dataset4$Sex =="MALE"),  na.rm = TRUE)
+female = subset(dataset4, subset=(dataset4$Sex =="FEMALE"),  na.rm = TRUE)
+
+#Lengths
+n1 = length(male$Length)
+n2 = length(female$Length)
+
+#Finding Means
+mean_male = mean(male$Length)
+mean_female = mean(female$Length)
+
+#Differenc between means
+mean_diff_2 = mean_male - mean_female
+denom = sqrt(((male_var)/n1)+((female_var)/n2))
+
+#Critical Value
+crit_val_1 = qnorm(1-a,n2-1)
+z_test_value = ((mean_diff_2 - 0)/(denom))
+
+Critical_Value_Left = qnorm(a/2)
+Critical_Value_Right = qnorm(1- (a/2))
+
+#P Value
+pval = round(1-pnorm(z_test_value), digits = 3)
+
+#Populating the table
+rownum = c("Sample size of male Lizards Length","Sample size of female Lizards Length","Male Lizard Length Mean","Female Lizard Length Mean","Male Lizards Variance","Female Lizards Variance","Alpha","Critical Left Value", "Critical Right Value", "Test Value", "P Value")
+
+column = c("Values")
+
+length_table_1 = matrix(c(n1, n2, mean_male, mean_female, male_var, female_var, a, Critical_Value_Left, Critical_Value_Right, z_test_value, pval), 
+                     nrow = 11, 
+                     byrow = TRUE, 
+                     ncol = 1)
+
+colnames(length_table_1) = column
+rownames(length_table_1) = rownum
+
+length_table_1 %>%
+  kbl(caption = "Table.2.1.Hypothesis Test Results for difference between 2 means using z-test", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+```
+<BR>
+<B> Methodology Task 2: </B> 
+<BR>
+For the above performed task, I divided the given dataset on the basis of gender. I used the subset function to do so, and then found the individual means. Then I found the difference in this means and used it to perform the z test.
+<BR>
+<B> Observations from Task 2: </B> 
+<BR>
+For the Task 2, I found the Z test value which comes out to be -10.22. The critical value is -2.57, and the test value is less than the critical value. But, since through the task, it was seen that the p value is coming out to be 1. A p value of one means that the 2 datasets have a correlation coefficient of 1. This means either the 2 datasets have no difference due to chance or that this is a type 1 error.
+
+<P>
+<FONT size=3, color= "purple">
+<B>Task 3 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B>Testing the Difference Between Two Variances</B></FONT>
+<BR>
+<B> Description:</B>
+In this task, I have performed hypotheses testing for testing the difference between 2 variances.
+<BR>
+the two hypotheses here in question are: 
+
+H0 (Null Hypothesis) = male length variance is euql to female length variance
+
+<CENTER><B> μ Sample 1 = μ Sample 2 </B></CENTER>
+
+H1 = female length variance > male length variance
+
+<CENTER><B> μ Sample 1 ≠  μ Sample 2 </B></CENTER>
+<BR>
+<BR>
+```{r message=FALSE, warning=FALSE}
+#Task 3
+female_var3 = var(female$Length)
+male_var3 = var(male$Length)
+
+#Performing the f test
+f_test1 = female_var/male_var
+
+#Critical value
+fdf1 = n2-1
+mdf1 = n1-1
+alpha3 = 0.01
+a3 = alpha3/2
+
+left1 = (alpha3/2)
+right1 = (1-alpha3/2)
+
+#define F critical values
+f_lower = qf(alpha3/2, fdf1, mdf1)
+f_upper = 1/qf(alpha3/2, fdf1, mdf1)
+
+#CI
+cvleft3 = f_test1*f_lower
+cvright3 = f_test1*f_upper
+
+#F Critical one-tail
+critF <- qf(alpha3, fdf1, mdf1,lower.tail=FALSE)
+
+#P Value
+pvalue2 = pf(f_test1, fdf1, mdf1, lower.tail = FALSE)
+
+#Populating the table
+rownum = c("Sample size of male Lizards Length","Sample size of female Lizards Length","Male Lizard Length Variance","Female Lizard Length Variance","Alpha","Critical Left Value", "Critical Right Value", "Critical Value One-Tail", "Test Value", "P Value")
+
+column = c("Values")
+
+var_table_3 = matrix(c(n1, n2, male_var3, female_var3, alpha3, cvleft3, cvright3, critF, f_test1, pvalue2), 
+                     nrow = 10, 
+                     byrow = TRUE, 
+                     ncol = 1)
+
+colnames(var_table_3) = column
+rownames(var_table_3) = rownum
+
+var_table_3 %>%
+  kbl(caption = "Table.3.1.Hypothesis Test Results for the difference between 2 Variances using f-test", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+```
+<BR>
+<B> Methodology Task 3: </B> 
+<BR>
+For the above performed task, I used the given variances to perform the F test. I found the degrees of freedom and then used the f test formula to find the test value.
+<BR>
+<B> Observations from Task 3: </B> 
+<BR>
+For the Task 3, I found the F test value which comes out to be 1.08. Since the test value is less than the critical value, there is not enough evidence to support the claim that the female variance is higher than the male variance. Also, the P value is greater than the alpha(benchmark value used to judge if a test statistic is statistically significant or not).
+
+<P>
+<FONT size=3, color= "purple">
+<B>Task 4 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B>Testing to find that the mean heart rate is not equal for Male anad Female Lizards</B></FONT>
+<BR>
+<B> Description:</B>
+In this task, I have performed hypotheses testing to find if the male and female lizards have the same mean hear rates or not. 
+<BR>
+the two hypotheses here in question are: 
+
+H0 (Null Hypothesis) = male and female herat rate variances are equal
+
+<CENTER><B> μ Sample 1 = μ Sample 2 </B></CENTER>
+
+H1 = male and female herat rate variances are not equal
+
+<CENTER><B> μ Sample 1 ≠  μ Sample 2 </B></CENTER>
+<BR>
+<BR>
+```{r message=FALSE, warning=FALSE}
+#Task 4
+hr_male_var = 0.34
+hr_female_var = 0.3
+Alpha=0.01
+
+Male_hr <- subset(dataset4$HeartRate,subset=(dataset4$Sex=="MALE"),  na.rm = TRUE)
+Female_hr <- subset(dataset4$HeartRate,subset=(dataset4$Sex=="FEMALE"),  na.rm = TRUE)
+
+mean_male_hr = mean(Male_hr)
+mean_female_hr = mean(Female_hr)
+
+
+n1_hr = length(Male_hr)
+n2_hr = length(Female_hr)
+
+#As female sample size is smaller than the male sample size we will use n2Bpm-1 in our formula
+CV_hr = qt(1-Alpha,n2_hr-1)
+
+t_test_val_hr = ((mean_male_hr-mean_female_hr)-0)/(sqrt((hr_male_var/n1_hr)+(hr_female_var/Female_hr)))
+
+
+#Populating the table
+rownum = c("Sample size of male Lizards Heart rate","Sample size of female Lizards Heart rate","Male Lizard Heart rate Mean","Female Lizard Heart rate Mean","Male Lizards Variance","Female Lizards Variance","Alpha","Critical Value","Test Value")
+
+column = c("Values")
+
+hr_table_4 = matrix(c(n1_hr, n2_hr, mean_male_hr, mean_female_hr, hr_male_var, hr_female_var, Alpha, CV_hr, t_test_val_hr), 
+                     nrow = 9, 
+                     byrow = TRUE, 
+                     ncol = 1)
+
+colnames(hr_table_4) = column
+rownames(hr_table_4) = rownum
+
+hr_table_4 %>%
+  kbl(caption = "Table.4.1 Hypothesis Test Results", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+```
+<BR>
+<B> Methodology Task 4: </B> 
+<BR>
+For the above performed task, I used the given variances to perform the T test. I have used the formulas for critical value and p value and also found the value of the test.
+<BR>
+<B> Observations from Task 4: </B> 
+<BR>
+For the Task 4, I found the F test value which comes out to be 0.46 which is less than the critical value. This means we have enough exidence to claim that the mean heart rates for the male and female lizards is not equal.
+
+<P>
+<FONT size=3, color= "purple">
+<B>Task 5 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B>Testing to find if the female heart rate variance is higher than the male variance or not</B></FONT>
+<BR>
+<B> Description:</B>
+```{r message=FALSE, warning=FALSE}
+#Task 5
+female_var5 = var(female$HeartRate)
+male_var5 = var(male$HeartRate)
+
+#Performing the f test
+f_test5 = female_var5/male_var5
+
+#Critical value
+fdf5 = n2-1
+mdf5 = n1-1
+alpha5 = 0.01
+a5 = alpha5/2
+
+left5 = (alpha5/2)
+right5 = (1-alpha5/2)
+
+#define F critical values
+f_lower5 = qf(alpha5/2, fdf5, mdf5)
+f_upper5 = 1/qf(alpha5/2, fdf5, mdf5)
+
+#CI
+cvleft5 = f_test5*f_lower5
+cvright5 = f_test5*f_upper5
+
+#F Critical one-tail
+critF5 <- qf(alpha5, fdf5, mdf5,lower.tail=FALSE)
+
+#P Value
+pvalue5 = pf(f_test5, fdf5, mdf5, lower.tail = FALSE)
+
+#Populating the table
+rownum = c("Sample size of male Lizards Heart Rate","Sample size of female Lizards Heart Rate","Male Lizard Heart Rate Variance","Female Lizard Heart Rate Variance","Alpha","Critical Left Value", "Critical Right Value", "Critical Value One-Tail", "Test Value", "P Value")
+
+column = c("Values")
+
+var_table_5 = matrix(c(n1, n1, male_var5, female_var5, alpha5, cvleft5, cvright5, critF5, f_test5, pvalue5), 
+                     nrow = 10, 
+                     byrow = TRUE, 
+                     ncol = 1)
+
+colnames(var_table_5) = column
+rownames(var_table_5) = rownum
+
+var_table_5 %>%
+  kbl(caption = "Table.5.1.Hypothesis Test Results for the difference between 2 Variances using f-test", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+```
+<BR>
+<B> Methodology Task 5: </B> 
+<BR>
+For the above performed task, I used the given variances to perform the F test. I found the degrees of freedom and then used the f test formula to find the test value. 
+<BR>
+<B> Observations from Task 5: </B> 
+<BR>
+For the Task 5, it can be observed that the value of the f test is coming out to be 1.36, which is less than the critical value. Also, the P value is 0.12 falls just short of statistical signinficance. Therefore, we can say that we have enough evidence to claim that the female heart rate variance is higher than the male variance. 
+
+
+<P>
+<FONT size=3, color= "purple">
+<B>Task 6 </B> </FONT>
+<BR> 
+<FONT color = "blue"><B> To test if meditation has an effect on sleep quality or not: </B></FONT>
+<BR>
+<B>Description:</B>
+<BR>
+In the following task, I have used hypotheses testing on two dependent samples with number of observations = 12 (n<30), to find whether meditation has an effect on sleep quality or not.
+```{r message=FALSE, warning=FALSE}
+# Task 6
+alpha = 0.01
+n6 = 12
+dof6 = n6-1
+cv = 2.576
+
+#Data Set
+dat1 = c(5.7, 7.8, 5.9, 5.6, 5.9, 6.8, 5.7, 3.9, 4.6, 4.5, 7.7, 6.3)
+dat2 = c(6.8, 8.7, 7.6, 6.2, 6.1, 7.7, 5.9, 4.5, 6.5, 6.1, 6.9, 9.2)
+
+diff_vector = (dat1 - dat2)
+mean_diff_vector = mean(diff_vector)
+diff_vector_square = diff_vector^2
+
+sum_diff_vector_square = sum(diff_vector_square)
+sum_diff_vector = sum(diff_vector)
+
+sd_diff = sqrt(((n6*sum_diff_vector_square)-(sum_diff_vector^2))/(n6*dof6))
+
+#Finding Test Value
+test_value6 = ((mean_diff_vector-0)/(sd_diff/sqrt(n6)))
+
+#Populating the table for analysis
+table_task6_b = matrix(c(dat1, dat2, diff_vector, diff_vector_square), ncol=4, byrow= FALSE)
+colnames(table_task6_b) = c("Data1", "Data2", "D=(X1-X2)", "D2=(X1-X2)2")
+rownames(table_task6_b) = c("", "", "", "", "", "", "", "", "", "", "", "")
+
+table_task6_bf = round(table_task6_b, 3) 
+
+final_table = as.table(table_task6_bf)
+
+final_table %>%
+  kbl(caption = "Table.6.1 Analysis Results", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+
+#Populating the result table
+rownum = c("Sample size","Degrees of Freedom","Test Value", "Critical Value")
+
+column = c("Values")
+
+table_6 = matrix(c(n6, dof6, test_value6, cv), 
+                     nrow = 4, 
+                     byrow = TRUE, 
+                     ncol = 1)
+
+colnames(table_6) = column
+rownames(table_6) = rownum
+
+table_6 %>%
+  kbl(caption = "Table.6.2. Hypothesis Test Results", 
+      font_size = 12, 
+      align = "c",
+      position ='center', 
+      digits = 2) %>%
+  kable_classic(full_width = T, 
+                font_size = 12)
+```
+<BR>
+<B> Methodology Task 6: </B> 
+<BR>
+In this task, I have used used the technique of testing between two variables when the two given samples are dependent. With a given alpha value of 0.01 and a total number (n) of 12 observations, I have calculated the difference in means to find the standard deviation for the differences and thereby tested it.
+<BR>
+If the subjects chosen for the first group in any way impacted the subjects chosen for the other group, then two samples would be dependent. Therefore, this is a test of 2 dependent paired samples.
+<BR>
+the two hypotheses here in question are: 
+
+H0 (Null Hypothesis) = meditation has an effect on sleep quality
+
+<CENTER><B> μ Sample 1 = μ Sample 2 </B></CENTER>
+
+H1 = meditation does not have any effect on sleep quality
+
+<CENTER><B> μ Sample 1 ≠  μ Sample 2 </B></CENTER>
+<BR>
+
+<B> Observations from Task 6: </B> 
+<BR>
+The test value found comes out to be -3.548, which is smaller than the critical value which is -2.576, therefore we fail to reject the null hypothesis.  
+<P>
+<FONT size=4, color= "purple">
+<B> CONCLUSION </B> </FONT>
+<BR>
+Through this report, I have performed Hypothesis Testing on the given data set. The following are the things I was able to conclude:
+<BR>
+1. I understood the different applications of f-test, z-test and t-test.
+<BR>
+2. Through this project, I was able to understand how to interpret the results of a hypothesis, when to and when not to reject a null hypothesis.
+<BR>
+3. I performed basic descriptive statistics as an open question, that helped me improve my visualization techniques, and allowed me to experiment with codes to present it in a formal manner.
+<BR>
+<P>
+<FONT size=4, color= "purple">
+<B> BIBLIOGRAPHY </B> </FONT>
+<BR>
+The following are the references used in this report:
+<BR>
+1. Chiluiza, D. <i> https://rpubs.com/Dee_Chiluiza/816756 </i>, retrieved on 5th December, 2022
+<BR>
+2. Martin R. Huecker, September 24, 2021. <i> Hypothesis Testing, P Values, Confidence Intervals, and Significance.</i> https://www.ncbi.nlm.nih.gov/books/NBK557421/ on 5th December, 2022
+<BR>
+3. B. Rebecca, August 7, 2020, <i>Understanding Confidence Intervals | Easy Examples & Formulas </i> https://www.scribbr.com/statistics/confidence-interval/ 5th December, 2022
+<BR>
+4. Enago, September 5, 2006, <i>Quick Guide to Biostatistics in Clinical Research: Hypothesis Testing</i> https://www.enago.com/academy/quick-guide-to-biostatistics-in-clinical-research-hypothesis-testing/#:~:text=An%20example%20of%20a%20specific,of%20milk%20chocolate%20per%20day.%E2%80%9D retrieved on 5th December, 2022
+<BR>
+5. B. SAIKRISHNA, June 15, 2013 <i> Difference between Z-test, F-test, and T-test </i> https://brandalyzer.blog/2010/12/05/difference-between-z-test-f-test-and-t-test/ retrieved on 5th December, 2022
+<P>
+<BR>
+<FONT size=4, color= "purple">
+<B> APPENDIX </B> </FONT>
+<BR>
+I have also attachech my reprt <FONT color = "blue"> "Project4_TsarinaPatnaik" </FONT> along with this code.
